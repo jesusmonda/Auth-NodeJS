@@ -77,7 +77,7 @@ functions:
       - subnet-0f76b6e5f96533dc5
     environment:
       ENVIRONMENT: ${self:custom.stages.${opt:stage}}
-      JWT_SECRET: aaaaaaaaaa
+      JWT_SECRET: example_secret
     events:
       - http:
           path: login
@@ -207,4 +207,4 @@ functions:
       - subnet-0f76b6e5f96533dc5
     environment:
       ENVIRONMENT: ${self:custom.stages.${opt:stage}}
-      JWT_SECRET: aaaaaaaaaa
+      JWT_SECRET: example_secret
