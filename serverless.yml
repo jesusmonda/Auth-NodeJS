@@ -1,0 +1,210 @@
+frameworkVersion: '2.61.0'
+
+service: MeetUs
+provider:
+  name: aws
+  stage: ${self:custom.stages.${opt:stage}}
+  profile: default
+  endpointType: REGIONAL
+  region: eu-west-1
+  lambdaHashingVersion: 20201221
+custom:
+  prune:
+    automatic: true
+    number: 3
+  serverless-offline:
+    httpPort: 8080
+  stages:
+    dev: dev
+    pro: pro
+  securityGroups:
+    dev: sg-07904f43bbcb9eebf
+    pro:	sg-0869dd865486694f7
+
+package:
+  individually: true
+
+plugins:
+  - serverless-offline
+  - serverless-prune-plugin
+  - serverless-iam-roles-per-function
+
+functions:
+  auth:
+    handler: microservices/auth/index.handler
+    name: meetus-${self:custom.stages.${opt:stage}}-auth-lambda
+    runtime: nodejs12.x
+    memorySize: 512
+    timeout: 10
+    package:
+      patterns:
+        - '!**'
+        - microservices/auth/src/**.js
+        - microservices/auth/**.js
+        - microservices/auth/node_modules/**
+        - microservices/auth/package.json
+    iamRoleStatementsName: meetus-${self:custom.stages.${opt:stage}}-auth-lambda-role
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - logs:CreateLogGroup
+          - logs:CreateLogStream
+          - logs:PutLogEvents
+        Resource:
+          - '*'
+      - Effect: Allow
+        Action:
+          - ec2:CreateNetworkInterface
+          - ec2:DescribeNetworkInterfaces
+          - ec2:DeleteNetworkInterface
+        Resource:
+          - '*'
+      - Effect: Allow
+        Action:
+          - lambda:listAliases
+          - lambda:listVersionsByFunction
+          - lambda:deleteFunction
+          - lambda:listLayerVersions
+          - lambda:deleteLayerVersion
+        Resource:
+          - '*'
+    vpc:
+      securityGroupIds:
+        - ${self:custom.securityGroups.${opt:stage}}
+      subnetIds:
+      - subnet-0789a8e79ec2ebb4c
+      - subnet-0a594e02d45a79d85
+      - subnet-0f76b6e5f96533dc5
+    environment:
+      ENVIRONMENT: ${self:custom.stages.${opt:stage}}
+      JWT_SECRET: aaaaaaaaaa
+    events:
+      - http:
+          path: login
+          method: post
+          cors: true
+          private: false
+      - http:
+          path: register
+          method: post
+          cors: true
+          private: false
+      - http:
+          path: logout
+          method: get
+          authorizer: authorizers
+          cors: true
+          private: false
+      - http:
+          path: refresh_token
+          method: post
+          cors: true
+          private: false
+
+  users:
+    handler: microservices/users/index.handler
+    name: meetus-${self:custom.stages.${opt:stage}}-users-lambda
+    runtime: nodejs12.x
+    memorySize: 512
+    timeout: 10
+    package:
+      patterns:
+        - '!**'
+        - microservices/users/src/**.js
+        - microservices/users/**.js
+        - microservices/users/node_modules/**
+        - microservices/users/package.json
+    iamRoleStatementsName: meetus-${self:custom.stages.${opt:stage}}-users-lambda-role
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - logs:CreateLogGroup
+          - logs:CreateLogStream
+          - logs:PutLogEvents
+        Resource:
+          - '*'
+      - Effect: Allow
+        Action:
+          - ec2:CreateNetworkInterface
+          - ec2:DescribeNetworkInterfaces
+          - ec2:DeleteNetworkInterface
+        Resource:
+          - '*'
+      - Effect: Allow
+        Action:
+          - lambda:listAliases
+          - lambda:listVersionsByFunction
+          - lambda:deleteFunction
+          - lambda:listLayerVersions
+          - lambda:deleteLayerVersion
+        Resource:
+          - '*'
+    vpc:
+      securityGroupIds:
+        - ${self:custom.securityGroups.${opt:stage}}
+      subnetIds:
+      - subnet-0789a8e79ec2ebb4c
+      - subnet-0a594e02d45a79d85
+      - subnet-0f76b6e5f96533dc5
+    environment:
+      ENVIRONMENT: ${self:custom.stages.${opt:stage}}
+    events:
+      - http:
+          path: users/{id}
+          method: get
+          authorizer: authorizers
+          cors: true
+          private: false
+          request:
+            parameters:
+              paths:
+                id: true
+
+  authorizers:
+    handler: microservices/authorizers/index.handler
+    name: meetus-${self:custom.stages.${opt:stage}}-authorizers-lambda
+    runtime: nodejs12.x
+    memorySize: 512
+    timeout: 10
+    package:
+      patterns:
+        - '!**'
+        - microservices/authorizers/src/**.js
+        - microservices/authorizers/**.js
+        - microservices/authorizers/node_modules/**
+        - microservices/authorizers/package.json
+    iamRoleStatementsName: meetus-${self:custom.stages.${opt:stage}}-authorizers-lambda-role
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - logs:CreateLogGroup
+          - logs:CreateLogStream
+          - logs:PutLogEvents
+        Resource:
+          - '*'
+      - Effect: Allow
+        Action:
+          - ec2:CreateNetworkInterface
+          - ec2:DescribeNetworkInterfaces
+          - ec2:DeleteNetworkInterface
+        Resource:
+          - '*'
+      - Effect: Allow
+        Action:
+          - lambda:listAliases
+          - lambda:listVersionsByFunction
+          - lambda:deleteFunction
+          - lambda:listLayerVersions
+          - lambda:deleteLayerVersion
+        Resource:
+          - '*'
+    vpc:
+      securityGroupIds:
+        - ${self:custom.securityGroups.${opt:stage}}
+      subnetIds:
+      - subnet-0789a8e79ec2ebb4c
+      - subnet-0a594e02d45a79d85
+      - subnet-0f76b6e5f96533dc5
+    environment:
+      ENVIRONMENT: ${self:custom.stages.${opt:stage}}
+      JWT_SECRET: aaaaaaaaaa
